@@ -254,8 +254,9 @@ export default function Conversation() {
           <div className="flex w-full items-center rounded-[40px] px-2">
             <MessageInput
               key={conversationId || 'new'}
-              onSubmit={(text) => {
-                handleQuestionSubmission(text);
+              onSubmit={({ text, imageBase64 }) => {
+                const payload = { text, imageBase64 };
+                handleQuestionSubmission(JSON.stringify(payload));
               }}
               loading={status === 'loading'}
               showSourceButton={selectedAgent ? false : true}
