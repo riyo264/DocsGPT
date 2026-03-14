@@ -179,7 +179,9 @@ export default function SharedAgent() {
         <div className="flex w-[95%] max-w-[1500px] flex-col items-center pb-2 md:w-9/12 lg:w-8/12 xl:w-8/12 2xl:w-6/12">
           <div className="w-full px-2">
             <MessageInput
-              onSubmit={(text) => handleQuestionSubmission(text)}
+              onSubmit={({ text, imageBase64 }) =>
+                handleQuestionSubmission(JSON.stringify({ text, imageBase64 }))
+              }
               loading={status === 'loading'}
               showSourceButton={sharedAgent ? false : true}
               showToolButton={sharedAgent ? false : true}

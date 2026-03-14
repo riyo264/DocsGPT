@@ -124,7 +124,9 @@ export default function AgentPreview() {
       <div className="absolute right-0 bottom-0 left-0 flex w-full flex-col gap-4 pb-2">
         <div className="w-full px-4">
           <MessageInput
-            onSubmit={(text) => handleQuestionSubmission(text)}
+            onSubmit={({ text, imageBase64 }) =>
+                handleQuestionSubmission(JSON.stringify({ text, imageBase64 }))
+              }
             loading={status === 'loading'}
             showSourceButton={selectedAgent ? false : true}
             showToolButton={selectedAgent ? false : true}

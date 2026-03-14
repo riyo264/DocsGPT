@@ -163,8 +163,8 @@ export const SharedConversation = () => {
           {apiKey ? (
             <div className="w-full px-2">
               <MessageInput
-                onSubmit={(text) => {
-                  handleQuestionSubmission(text);
+                onSubmit={({ text, imageBase64 }) => {
+                  handleQuestionSubmission(JSON.stringify({ text, imageBase64 }));
                 }}
                 loading={status === 'loading'}
                 showSourceButton={false}

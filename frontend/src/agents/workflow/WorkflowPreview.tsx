@@ -620,7 +620,9 @@ export default function WorkflowPreview({
           </div>
           <div className="dark:bg-raisin-black absolute right-0 bottom-0 left-0 flex w-full flex-col gap-2 bg-white px-4 pt-2 pb-4">
             <MessageInput
-              onSubmit={(text) => handleQuestionSubmission(text)}
+              onSubmit={({ text, imageBase64 }) =>
+                handleQuestionSubmission(JSON.stringify({ text, imageBase64 }))
+              }
               loading={status === 'loading'}
               showSourceButton={false}
               showToolButton={false}
