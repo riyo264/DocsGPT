@@ -65,10 +65,12 @@ export default function SharedAgent() {
   const handleQuestion = useCallback(
     ({
       question,
+      imageBase64,
       isRetry = false,
       index = undefined,
     }: {
       question: string;
+      imageBase64?: string;
       isRetry?: boolean;
       index?: number;
     }) => {
@@ -80,7 +82,7 @@ export default function SharedAgent() {
         handleFetchAnswer({ question: trimmedQuestion, index });
       } else {
         if (!isRetry) {
-          const newQuery: Query = { prompt: trimmedQuestion };
+          const newQuery: Query = { prompt: trimmedQuestion, imageBase64 }; 
           dispatch(addQuery(newQuery));
         }
         handleFetchAnswer({ question: trimmedQuestion, index: undefined });
@@ -93,10 +95,12 @@ export default function SharedAgent() {
     question?: string,
     updated?: boolean,
     indx?: number,
+    imageBase64?: string, 
   ) => {
     if (updated === true && question !== undefined && indx !== undefined) {
       handleQuestion({
         question,
+        imageBase64, 
         index: indx,
         isRetry: false,
       });
@@ -106,12 +110,14 @@ export default function SharedAgent() {
         const lastQueryIndex = queries.length - 1;
         handleQuestion({
           question: currentInput,
+          imageBase64,
           isRetry: true,
           index: lastQueryIndex,
         });
       } else {
         handleQuestion({
           question: currentInput,
+          imageBase64,
           isRetry: false,
           index: undefined,
         });
@@ -180,7 +186,7 @@ export default function SharedAgent() {
           <div className="w-full px-2">
             <MessageInput
               onSubmit={({ text, imageBase64 }) =>
-                handleQuestionSubmission(JSON.stringify({ text, imageBase64 }))
+                handleQuestionSubmission(text, false, undefined, imageBase64)
               }
               loading={status === 'loading'}
               showSourceButton={sharedAgent ? false : true}

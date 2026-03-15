@@ -413,10 +413,12 @@ export default function WorkflowPreview({
   const handleQuestion = useCallback(
     ({
       question,
+      imageBase64,
       isRetry = false,
       index = undefined,
     }: {
       question: string;
+      imageBase64?: string;
       isRetry?: boolean;
       index?: number;
     }) => {
@@ -428,7 +430,7 @@ export default function WorkflowPreview({
         handleFetchAnswer({ question: trimmedQuestion, index });
       } else {
         if (!isRetry) {
-          const newQuery: Query = { prompt: trimmedQuestion };
+          const newQuery: Query = { prompt: trimmedQuestion, imageBase64 };
           dispatch(addQuery(newQuery));
         }
         handleFetchAnswer({ question: trimmedQuestion, index: undefined });
@@ -441,10 +443,12 @@ export default function WorkflowPreview({
     question?: string,
     updated?: boolean,
     indx?: number,
+    imageBase64?: string, 
   ) => {
     if (updated === true && question !== undefined && indx !== undefined) {
       handleQuestion({
         question,
+        imageBase64,
         index: indx,
         isRetry: false,
       });
@@ -454,12 +458,14 @@ export default function WorkflowPreview({
         const lastQueryIndex = queries.length - 1;
         handleQuestion({
           question: currentInput,
+          imageBase64,
           isRetry: true,
           index: lastQueryIndex,
         });
       } else {
         handleQuestion({
           question: currentInput,
+          imageBase64, 
           isRetry: false,
           index: undefined,
         });
@@ -621,7 +627,7 @@ export default function WorkflowPreview({
           <div className="dark:bg-raisin-black absolute right-0 bottom-0 left-0 flex w-full flex-col gap-2 bg-white px-4 pt-2 pb-4">
             <MessageInput
               onSubmit={({ text, imageBase64 }) =>
-                handleQuestionSubmission(JSON.stringify({ text, imageBase64 }))
+                handleQuestionSubmission(text, false, undefined, imageBase64) 
               }
               loading={status === 'loading'}
               showSourceButton={false}

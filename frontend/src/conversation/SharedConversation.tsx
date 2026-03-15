@@ -44,14 +44,14 @@ export const SharedConversation = () => {
 
   useEffect(() => {
     identifier && dispatch(setIdentifier(identifier));
-  }, []);
+  }, [identifier, dispatch]);
 
   useEffect(() => {
     if (queries.length) {
       queries[queries.length - 1].error && setLastQueryReturnedErr(true);
-      queries[queries.length - 1].response && setLastQueryReturnedErr(false); //considering a query that initially returned error can later include a response property on retry
+      queries[queries.length - 1].response && setLastQueryReturnedErr(false); 
     }
-  }, [queries[queries.length - 1]]);
+  }, [queries]);
 
   const fetchQueries = () => {
     identifier &&
@@ -77,10 +77,14 @@ export const SharedConversation = () => {
         });
   };
 
-  const handleQuestionSubmission = (question?: string) => {
+const handleQuestionSubmission = (
+    question?: string,
+    updated?: boolean,
+    indx?: number,
+    imageBase64?: string,
+  ) => {
     if (question && status !== 'loading') {
       if (lastQueryReturnedErr) {
-        // update last failed query with new prompt
         dispatch(
           updateQuery({
             index: queries.length - 1,
@@ -92,18 +96,21 @@ export const SharedConversation = () => {
         handleQuestion({
           question: queries[queries.length - 1].prompt,
           isRetry: true,
+          imageBase64,
         });
       } else {
-        handleQuestion({ question });
+        handleQuestion({ question, imageBase64 });
       }
     }
   };
 
   const handleQuestion = ({
     question,
+    imageBase64,
     isRetry = false,
   }: {
     question: string;
+    imageBase64?: string;
     isRetry?: boolean;
   }) => {
     question = question.trim();
@@ -118,11 +125,13 @@ export const SharedConversation = () => {
         addQuery({
           prompt: question,
           attachments: filesAttached,
+          imageBase64,
         }),
-      ); //dispatch only new queries
+      );
 
     dispatch(fetchSharedAnswer({ question }));
   };
+  
   useEffect(() => {
     fetchQueries();
   }, []);
@@ -164,7 +173,7 @@ export const SharedConversation = () => {
             <div className="w-full px-2">
               <MessageInput
                 onSubmit={({ text, imageBase64 }) => {
-                  handleQuestionSubmission(JSON.stringify({ text, imageBase64 }));
+                  handleQuestionSubmission(text, false, undefined, imageBase64);
                 }}
                 loading={status === 'loading'}
                 showSourceButton={false}

@@ -283,6 +283,7 @@ export function handleFetchSharedAnswerStreaming(
   apiKey: string,
   history: Array<any> = [],
   attachments: string[] = [],
+  imageBase64: string | undefined, // <-- NEW ARGUMENT
   onEvent: (event: MessageEvent) => void,
 ): Promise<Answer> {
   history = history.map((item) => {
@@ -300,6 +301,7 @@ export function handleFetchSharedAnswerStreaming(
       api_key: apiKey,
       save_conversation: false,
       attachments: attachments.length > 0 ? attachments : undefined,
+      imageBase64: imageBase64, // <-- ADDED TO PAYLOAD
     };
     conversationService
       .answerStream(payload, null, signal)
@@ -356,6 +358,7 @@ export function handleFetchSharedAnswer(
   signal: AbortSignal,
   apiKey: string,
   attachments?: string[],
+  imageBase64?: string, // <-- NEW ARGUMENT
 ): Promise<
   | {
       result: any;
@@ -376,6 +379,7 @@ export function handleFetchSharedAnswer(
     api_key: apiKey,
     attachments:
       attachments && attachments.length > 0 ? attachments : undefined,
+    imageBase64: imageBase64, // <-- ADDED TO PAYLOAD
   };
 
   return conversationService
