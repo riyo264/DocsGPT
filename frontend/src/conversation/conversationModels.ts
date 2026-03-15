@@ -65,4 +65,6 @@ export interface RetrievalPayload {
   attachments?: string[];
   save_conversation?: boolean;
   model_id?: string;
+  image_base64?: string;
+  image_mime_type?: string;
 }

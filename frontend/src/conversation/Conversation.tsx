@@ -15,6 +15,7 @@ import { AppDispatch } from '../store';
 import { handleSendFeedback } from './conversationHandlers';
 import ConversationMessages from './ConversationMessages';
 import { FEEDBACK, Query } from './conversationModels';
+import { parseMultimodalInput } from './multimodal';
 import { ToolCallsType } from './types';
 import {
   addQuery,
@@ -81,8 +82,9 @@ export default function Conversation() {
       isRetry?: boolean;
       index?: number;
     }) => {
-      const trimmedQuestion = question.trim();
-      if (trimmedQuestion === '') return;
+      const parsedInput = parseMultimodalInput(question);
+      const trimmedQuestion = parsedInput.text.trim();
+      if (trimmedQuestion === '' && !parsedInput.imageBase64) return;
 
       const filesAttached = completedAttachments
         .filter((a) => a.id)
@@ -90,7 +92,10 @@ export default function Conversation() {
 
       if (index !== undefined) {
         if (!isRetry) dispatch(resendQuery({ index, prompt: trimmedQuestion }));
-        handleFetchAnswer({ question: trimmedQuestion, index });
+        handleFetchAnswer({
+          question: parsedInput.isMultimodalPayload ? question : trimmedQuestion,
+          index,
+        });
       } else {
         if (!isRetry)
           dispatch(
@@ -99,7 +104,10 @@ export default function Conversation() {
               attachments: filesAttached,
             }),
           );
-        handleFetchAnswer({ question: trimmedQuestion, index });
+        handleFetchAnswer({
+          question: parsedInput.isMultimodalPayload ? question : trimmedQuestion,
+          index,
+        });
       }
     },
     [dispatch, handleFetchAnswer, completedAttachments],
@@ -137,13 +145,16 @@ export default function Conversation() {
     if (updated === true) {
       handleQuestion({ question: question as string, index: indx });
     } else if (question && status !== 'loading') {
+      const parsedInput = parseMultimodalInput(question);
+      const promptText = parsedInput.text.trim();
+
       if (lastQueryReturnedErr && queries.length > 0) {
         const retryIndex = queries.length - 1;
         dispatch(
           updateQuery({
             index: retryIndex,
             query: {
-              prompt: question,
+              prompt: promptText || question,
             },
           }),
         );
@@ -254,8 +265,9 @@ export default function Conversation() {
           <div className="flex w-full items-center rounded-[40px] px-2">
             <MessageInput
               key={conversationId || 'new'}
-              onSubmit={(text) => {
-                handleQuestionSubmission(text);
+              onSubmit={({ text, imageBase64, imageMimeType }) => {
+                const payload = { text, imageBase64, imageMimeType };
+                handleQuestionSubmission(JSON.stringify(payload));
               }}
               loading={status === 'loading'}
               showSourceButton={selectedAgent ? false : true}

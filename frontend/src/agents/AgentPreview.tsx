@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import MessageInput from '../components/MessageInput';
 import ConversationMessages from '../conversation/ConversationMessages';
 import { Query } from '../conversation/conversationModels';
+import { parseMultimodalInput } from '../conversation/multimodal';
 import { selectSelectedAgent } from '../preferences/preferenceSlice';
 import { AppDispatch } from '../store';
 import {
@@ -48,18 +49,25 @@ export default function AgentPreview() {
       isRetry?: boolean;
       index?: number;
     }) => {
-      const trimmedQuestion = question.trim();
-      if (trimmedQuestion === '') return;
+      const parsedInput = parseMultimodalInput(question);
+      const trimmedQuestion = parsedInput.text.trim();
+      if (trimmedQuestion === '' && !parsedInput.imageBase64) return;
 
       if (index !== undefined) {
         if (!isRetry) dispatch(resendQuery({ index, prompt: trimmedQuestion }));
-        handleFetchAnswer({ question: trimmedQuestion, index });
+        handleFetchAnswer({
+          question: parsedInput.isMultimodalPayload ? question : trimmedQuestion,
+          index,
+        });
       } else {
         if (!isRetry) {
           const newQuery: Query = { prompt: trimmedQuestion };
           dispatch(addQuery(newQuery));
         }
-        handleFetchAnswer({ question: trimmedQuestion, index: undefined });
+        handleFetchAnswer({
+          question: parsedInput.isMultimodalPayload ? question : trimmedQuestion,
+          index: undefined,
+        });
       }
     },
     [dispatch, handleFetchAnswer],
@@ -77,17 +85,16 @@ export default function AgentPreview() {
         isRetry: false,
       });
     } else if (question && status !== 'loading') {
-      const currentInput = question.trim();
       if (lastQueryReturnedErr && queries.length > 0) {
         const lastQueryIndex = queries.length - 1;
         handleQuestion({
-          question: currentInput,
+          question,
           isRetry: true,
           index: lastQueryIndex,
         });
       } else {
         handleQuestion({
-          question: currentInput,
+          question,
           isRetry: false,
           index: undefined,
         });
@@ -124,7 +131,11 @@ export default function AgentPreview() {
       <div className="absolute right-0 bottom-0 left-0 flex w-full flex-col gap-4 pb-2">
         <div className="w-full px-4">
           <MessageInput
-            onSubmit={(text) => handleQuestionSubmission(text)}
+            onSubmit={({ text, imageBase64, imageMimeType }) =>
+                handleQuestionSubmission(
+                  JSON.stringify({ text, imageBase64, imageMimeType }),
+                )
+              }
             loading={status === 'loading'}
             showSourceButton={selectedAgent ? false : true}
             showToolButton={selectedAgent ? false : true}

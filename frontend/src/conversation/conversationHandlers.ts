@@ -2,6 +2,7 @@ import conversationService from '../api/services/conversationService';
 import { Doc } from '../models/misc';
 import { Answer, FEEDBACK, RetrievalPayload } from './conversationModels';
 import { ToolCallsType } from './types';
+import { parseMultimodalInput } from './multimodal';
 
 export function handleFetchAnswer(
   question: string,
@@ -36,8 +37,9 @@ export function handleFetchAnswer(
       title: any;
     }
 > {
+  const parsedInput = parseMultimodalInput(question);
   const payload: RetrievalPayload = {
-    question: question,
+    question: parsedInput.text,
     conversation_id: conversationId,
     prompt_id: promptId,
     chunks: chunks,
@@ -48,6 +50,13 @@ export function handleFetchAnswer(
 
   if (modelId) {
     payload.model_id = modelId;
+  }
+
+  if (parsedInput.imageBase64) {
+    payload.image_base64 = parsedInput.imageBase64;
+    if (parsedInput.imageMimeType) {
+      payload.image_mime_type = parsedInput.imageMimeType;
+    }
   }
 
   // Add attachments to payload if they exist
@@ -79,7 +88,7 @@ export function handleFetchAnswer(
       const result = data.answer;
       return {
         answer: result,
-        query: question,
+        query: parsedInput.text,
         result,
         thought: data.thought,
         sources: data.sources,
@@ -105,8 +114,9 @@ export function handleFetchAnswerSteaming(
   save_conversation = true,
   modelId?: string,
 ): Promise<Answer> {
+  const parsedInput = parseMultimodalInput(question);
   const payload: RetrievalPayload = {
-    question: question,
+    question: parsedInput.text,
     conversation_id: conversationId,
     prompt_id: promptId,
     chunks: chunks,
@@ -118,6 +128,13 @@ export function handleFetchAnswerSteaming(
 
   if (modelId) {
     payload.model_id = modelId;
+  }
+
+  if (parsedInput.imageBase64) {
+    payload.image_base64 = parsedInput.imageBase64;
+    if (parsedInput.imageMimeType) {
+      payload.image_mime_type = parsedInput.imageMimeType;
+    }
   }
 
   // Add attachments to payload if they exist
@@ -195,8 +212,9 @@ export function handleSearch(
   conversation_id: string | null,
   chunks: string,
 ) {
+  const parsedInput = parseMultimodalInput(question);
   const payload: RetrievalPayload = {
-    question: question,
+    question: parsedInput.text,
     conversation_id: conversation_id,
     chunks: chunks,
     isNoneDoc: selectedDocs.length === 0,
@@ -294,12 +312,15 @@ export function handleFetchSharedAnswerStreaming(
   });
 
   return new Promise<Answer>((resolve, reject) => {
+    const parsedInput = parseMultimodalInput(question);
     const payload = {
-      question: question,
+      question: parsedInput.text,
       history: JSON.stringify(history),
       api_key: apiKey,
       save_conversation: false,
       attachments: attachments.length > 0 ? attachments : undefined,
+      image_base64: parsedInput.imageBase64,
+      image_mime_type: parsedInput.imageMimeType,
     };
     conversationService
       .answerStream(payload, null, signal)
@@ -371,11 +392,14 @@ export function handleFetchSharedAnswer(
       title: any;
     }
 > {
+  const parsedInput = parseMultimodalInput(question);
   const payload = {
-    question: question,
+    question: parsedInput.text,
     api_key: apiKey,
     attachments:
       attachments && attachments.length > 0 ? attachments : undefined,
+    image_base64: parsedInput.imageBase64,
+    image_mime_type: parsedInput.imageMimeType,
   };
 
   return conversationService
@@ -391,7 +415,7 @@ export function handleFetchSharedAnswer(
       const result = data.answer;
       return {
         answer: result,
-        query: question,
+        query: parsedInput.text,
         result,
         sources: data.sources,
         toolCalls: data.tool_calls,

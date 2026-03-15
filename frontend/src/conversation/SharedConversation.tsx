@@ -9,6 +9,7 @@ import { selectToken } from '../preferences/preferenceSlice';
 import { AppDispatch } from '../store';
 import { formatDate } from '../utils/dateTimeUtils';
 import ConversationMessages from './ConversationMessages';
+import { parseMultimodalInput } from './multimodal';
 import {
   addQuery,
   fetchSharedAnswer,
@@ -85,7 +86,7 @@ export const SharedConversation = () => {
           updateQuery({
             index: queries.length - 1,
             query: {
-              prompt: question,
+              prompt: parseMultimodalInput(question).text || question,
             },
           }),
         );
@@ -106,8 +107,9 @@ export const SharedConversation = () => {
     question: string;
     isRetry?: boolean;
   }) => {
-    question = question.trim();
-    if (question === '') return;
+    const parsedInput = parseMultimodalInput(question);
+    const promptText = parsedInput.text.trim();
+    if (promptText === '' && !parsedInput.imageBase64) return;
 
     const filesAttached = completedAttachments
       .filter((a) => a.id)
@@ -116,12 +118,16 @@ export const SharedConversation = () => {
     !isRetry &&
       dispatch(
         addQuery({
-          prompt: question,
+          prompt: promptText,
           attachments: filesAttached,
         }),
       ); //dispatch only new queries
 
-    dispatch(fetchSharedAnswer({ question }));
+    dispatch(
+      fetchSharedAnswer({
+        question: parsedInput.isMultimodalPayload ? question : promptText,
+      }),
+    );
   };
   useEffect(() => {
     fetchQueries();
@@ -163,8 +169,10 @@ export const SharedConversation = () => {
           {apiKey ? (
             <div className="w-full px-2">
               <MessageInput
-                onSubmit={(text) => {
-                  handleQuestionSubmission(text);
+                onSubmit={({ text, imageBase64, imageMimeType }) => {
+                  handleQuestionSubmission(
+                    JSON.stringify({ text, imageBase64, imageMimeType }),
+                  );
                 }}
                 loading={status === 'loading'}
                 showSourceButton={false}

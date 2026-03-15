@@ -11,6 +11,7 @@ import MessageInput from '../components/MessageInput';
 import Spinner from '../components/Spinner';
 import ConversationMessages from '../conversation/ConversationMessages';
 import { Query } from '../conversation/conversationModels';
+import { parseMultimodalInput } from '../conversation/multimodal';
 import {
   addQuery,
   fetchAnswer,
@@ -72,18 +73,25 @@ export default function SharedAgent() {
       isRetry?: boolean;
       index?: number;
     }) => {
-      const trimmedQuestion = question.trim();
-      if (trimmedQuestion === '') return;
+      const parsedInput = parseMultimodalInput(question);
+      const trimmedQuestion = parsedInput.text.trim();
+      if (trimmedQuestion === '' && !parsedInput.imageBase64) return;
 
       if (index !== undefined) {
         if (!isRetry) dispatch(resendQuery({ index, prompt: trimmedQuestion }));
-        handleFetchAnswer({ question: trimmedQuestion, index });
+        handleFetchAnswer({
+          question: parsedInput.isMultimodalPayload ? question : trimmedQuestion,
+          index,
+        });
       } else {
         if (!isRetry) {
           const newQuery: Query = { prompt: trimmedQuestion };
           dispatch(addQuery(newQuery));
         }
-        handleFetchAnswer({ question: trimmedQuestion, index: undefined });
+        handleFetchAnswer({
+          question: parsedInput.isMultimodalPayload ? question : trimmedQuestion,
+          index: undefined,
+        });
       }
     },
     [dispatch, handleFetchAnswer],
@@ -101,17 +109,16 @@ export default function SharedAgent() {
         isRetry: false,
       });
     } else if (question && status !== 'loading') {
-      const currentInput = question.trim();
       if (lastQueryReturnedErr && queries.length > 0) {
         const lastQueryIndex = queries.length - 1;
         handleQuestion({
-          question: currentInput,
+          question,
           isRetry: true,
           index: lastQueryIndex,
         });
       } else {
         handleQuestion({
-          question: currentInput,
+          question,
           isRetry: false,
           index: undefined,
         });
@@ -179,7 +186,11 @@ export default function SharedAgent() {
         <div className="flex w-[95%] max-w-[1500px] flex-col items-center pb-2 md:w-9/12 lg:w-8/12 xl:w-8/12 2xl:w-6/12">
           <div className="w-full px-2">
             <MessageInput
-              onSubmit={(text) => handleQuestionSubmission(text)}
+              onSubmit={({ text, imageBase64, imageMimeType }) =>
+                handleQuestionSubmission(
+                  JSON.stringify({ text, imageBase64, imageMimeType }),
+                )
+              }
               loading={status === 'loading'}
               showSourceButton={sharedAgent ? false : true}
               showToolButton={sharedAgent ? false : true}
