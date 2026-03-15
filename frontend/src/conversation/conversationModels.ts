@@ -48,6 +48,7 @@ export interface Query {
   tool_calls?: ToolCallsType[];
   error?: string;
   attachments?: { id: string; fileName: string }[];
+  imageBase64?: string;
   structured?: boolean;
   schema?: object;
 }

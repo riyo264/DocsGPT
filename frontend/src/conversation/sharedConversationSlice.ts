@@ -37,6 +37,11 @@ export const fetchSharedAnswer = createAsyncThunk<Answer, { question: string }>(
       .filter((a) => a.id)
       .map((a) => a.id) as string[];
 
+    // --- NEW LOGIC: Extract the image from the latest query ---
+    const currentQueryIndex = state.sharedConversation.queries.length - 1;
+    const imageBase64 = state.sharedConversation.queries[currentQueryIndex]?.imageBase64;
+    // ----------------------------------------------------------
+
     if (attachmentIds.length > 0) {
       dispatch(clearAttachments());
     }
@@ -49,6 +54,7 @@ export const fetchSharedAnswer = createAsyncThunk<Answer, { question: string }>(
           state.sharedConversation.apiKey,
           state.sharedConversation.queries,
           attachmentIds,
+          imageBase64,
           (event) => {
             const data = JSON.parse(event.data);
             // check if the 'end' event has been received
@@ -105,6 +111,7 @@ export const fetchSharedAnswer = createAsyncThunk<Answer, { question: string }>(
           signal,
           state.sharedConversation.apiKey,
           attachmentIds,
+          imageBase64,
         );
         if (answer) {
           let sourcesPrepped = [];

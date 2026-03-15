@@ -414,10 +414,12 @@ export default function WorkflowPreview({
   const handleQuestion = useCallback(
     ({
       question,
+      imageBase64,
       isRetry = false,
       index = undefined,
     }: {
       question: string;
+      imageBase64?: string;
       isRetry?: boolean;
       index?: number;
     }) => {
@@ -433,7 +435,7 @@ export default function WorkflowPreview({
         });
       } else {
         if (!isRetry) {
-          const newQuery: Query = { prompt: trimmedQuestion };
+          const newQuery: Query = { prompt: trimmedQuestion, imageBase64 };
           dispatch(addQuery(newQuery));
         }
         handleFetchAnswer({
@@ -449,10 +451,12 @@ export default function WorkflowPreview({
     question?: string,
     updated?: boolean,
     indx?: number,
+    imageBase64?: string, 
   ) => {
     if (updated === true && question !== undefined && indx !== undefined) {
       handleQuestion({
         question,
+        imageBase64,
         index: indx,
         isRetry: false,
       });
@@ -461,12 +465,16 @@ export default function WorkflowPreview({
         const lastQueryIndex = queries.length - 1;
         handleQuestion({
           question,
+          question: currentInput,
+          imageBase64,
           isRetry: true,
           index: lastQueryIndex,
         });
       } else {
         handleQuestion({
           question,
+          question: currentInput,
+          imageBase64, 
           isRetry: false,
           index: undefined,
         });
@@ -631,6 +639,8 @@ export default function WorkflowPreview({
                 handleQuestionSubmission(
                   JSON.stringify({ text, imageBase64, imageMimeType }),
                 )
+              onSubmit={({ text, imageBase64 }) =>
+                handleQuestionSubmission(text, false, undefined, imageBase64) 
               }
               loading={status === 'loading'}
               showSourceButton={false}

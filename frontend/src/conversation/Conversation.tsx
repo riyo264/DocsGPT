@@ -75,10 +75,12 @@ export default function Conversation() {
   const handleQuestion = useCallback(
     ({
       question,
+      imageBase64,
       isRetry = false,
       index = undefined,
     }: {
       question: string;
+      imageBase64?: string;
       isRetry?: boolean;
       index?: number;
     }) => {
@@ -102,6 +104,7 @@ export default function Conversation() {
             addQuery({
               prompt: trimmedQuestion,
               attachments: filesAttached,
+              imageBase64,
             }),
           );
         handleFetchAnswer({
@@ -141,9 +144,10 @@ export default function Conversation() {
     question?: string,
     updated?: boolean,
     indx?: number,
+    imageBase64?: string,
   ) => {
     if (updated === true) {
-      handleQuestion({ question: question as string, index: indx });
+      handleQuestion({ question: question as string, index: indx, imageBase64 });
     } else if (question && status !== 'loading') {
       const parsedInput = parseMultimodalInput(question);
       const promptText = parsedInput.text.trim();
@@ -162,10 +166,12 @@ export default function Conversation() {
           question,
           isRetry: true,
           index: retryIndex,
+          imageBase64,
         });
       } else {
         handleQuestion({
           question,
+          imageBase64,
         });
       }
     }
@@ -268,6 +274,8 @@ export default function Conversation() {
               onSubmit={({ text, imageBase64, imageMimeType }) => {
                 const payload = { text, imageBase64, imageMimeType };
                 handleQuestionSubmission(JSON.stringify(payload));
+              onSubmit={({ text, imageBase64 }) => {
+                handleQuestionSubmission(text, false, undefined, imageBase64);
               }}
               loading={status === 'loading'}
               showSourceButton={selectedAgent ? false : true}

@@ -38,6 +38,7 @@ const generateId = (): string =>
 
 type MessageInputProps = {
   onSubmit: (payload: { text: string; imageBase64?: string; imageMimeType?: string }) => void;
+  onSubmit: (payload: { text: string; imageBase64?: string }) => void;
   loading: boolean;
   showSourceButton?: boolean;
   showToolButton?: boolean;

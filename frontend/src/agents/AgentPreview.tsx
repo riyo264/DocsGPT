@@ -42,10 +42,12 @@ export default function AgentPreview() {
   const handleQuestion = useCallback(
     ({
       question,
+      imageBase64, // <-- 1. Added imageBase64
       isRetry = false,
       index = undefined,
     }: {
       question: string;
+      imageBase64?: string; // <-- Added type
       isRetry?: boolean;
       index?: number;
     }) => {
@@ -61,7 +63,7 @@ export default function AgentPreview() {
         });
       } else {
         if (!isRetry) {
-          const newQuery: Query = { prompt: trimmedQuestion };
+          const newQuery: Query = { prompt: trimmedQuestion, imageBase64 }; // <-- 2. Save image to state
           dispatch(addQuery(newQuery));
         }
         handleFetchAnswer({
@@ -77,10 +79,12 @@ export default function AgentPreview() {
     question?: string,
     updated?: boolean,
     indx?: number,
+    imageBase64?: string, // <-- 3. Added 4th argument
   ) => {
     if (updated === true && question !== undefined && indx !== undefined) {
       handleQuestion({
         question,
+        imageBase64, // <-- Passed down
         index: indx,
         isRetry: false,
       });
@@ -89,12 +93,16 @@ export default function AgentPreview() {
         const lastQueryIndex = queries.length - 1;
         handleQuestion({
           question,
+          question: currentInput,
+          imageBase64, // <-- Passed down
           isRetry: true,
           index: lastQueryIndex,
         });
       } else {
         handleQuestion({
           question,
+          question: currentInput,
+          imageBase64, // <-- Passed down
           isRetry: false,
           index: undefined,
         });
@@ -136,6 +144,10 @@ export default function AgentPreview() {
                   JSON.stringify({ text, imageBase64, imageMimeType }),
                 )
               }
+            onSubmit={({ text, imageBase64 }) =>
+              // <-- 4. Removed JSON.stringify and split into arguments
+              handleQuestionSubmission(text, false, undefined, imageBase64)
+            }
             loading={status === 'loading'}
             showSourceButton={selectedAgent ? false : true}
             showToolButton={selectedAgent ? false : true}
